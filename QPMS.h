@@ -1,25 +1,12 @@
-/*
-* File:   QPMS.h
-* Author: yeguo
-*
-* Created on April 5, 2015, 4:29 PM
-*/
-
-#include <stdio.h>
-
 #define PI 3.14159265358979323846
 #define SQRT_TWO 1.41421356237
 #define SQRT_TREEE 1.73205080757
 
 #define DIM 500 // Number of the cells on each dimension
-#define OUTSIDE 1000
 
 typedef enum {
-	P, D, G, I_WP, N, W, P_W, T, T_1, T_2, T_3
+	P, D, G
 } SURFACE_TYPE;
-
-extern const int edgeTable[256];
-extern const int triTable[256][16];
 
 //Data structure POINT_COORDINATE
 typedef struct {
@@ -66,3 +53,4 @@ float dist_between_points(POINT *p1, POINT *p2);
 float volumn_tetra(TETRAHEDRON *tetra);
 void writeRawiv(float *dataset, char* name);
 void scaleDataset(float *dataset);
+float convertThres(float *dataset, int thres);
