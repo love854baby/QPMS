@@ -200,6 +200,24 @@ int main() {
 	vertice[7].y = SQRT_TREEE / 3;
 	vertice[7].z = -2 * SQRT_TWO / SQRT_TREEE;
 
+	/*
+	vertice[0].x = 1;
+	vertice[0].y = 1;
+	vertice[0].z = 1;
+
+	vertice[1].x = -1;
+	vertice[1].y = 1;
+	vertice[1].z = -1;
+
+	vertice[2].x = 1;
+	vertice[2].y = -1;
+	vertice[2].z = -1;
+
+	vertice[3].x = -1;
+	vertice[3].y = -1;
+	vertice[3].z = 1;
+	*/
+
 	float *array = (float *)malloc(sizeof(float)* DIM * DIM * DIM);
 
 	//Set surface type here
@@ -211,14 +229,17 @@ int main() {
 
 	generateDataset(array, tetra, numOfTetra, type);
 
-	free(tetra);
-
 	float thres = convertThres(array, 88);
-	//thres = 0.1;
 
 	clock_t start = clock(), diff;
 
 	SURFACEMESH *surfmesh = (SURFACEMESH *)marchingCube(array, thres);
+
+	int i = 1000;
+	while (i < 1100) {
+		printf("%f ", array[i]);
+		i++;
+	}
 
 	diff = clock() - start;
 
@@ -237,6 +258,7 @@ int main() {
 	free(surfmesh->triangles);
 	free(surfmesh);
 	free(array);
+	free(tetra);
 
 	return 0;
 }

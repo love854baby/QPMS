@@ -4,7 +4,7 @@
 #include <float.h>
 #include "QPMS.h"
 #include "Rawiv-reader.h"
-#define OUTSIDE FLT_MAX
+#define OUTSIDE 1000
 
 #define INDEX(x, y, z) ((x + (y * DIM)) + ((z * DIM) * DIM))
 
@@ -470,8 +470,8 @@ void generateDataset(float* dataset, TETRAHEDRON *tetra, int num, SURFACE_TYPE t
 							//dataset[INDEX(x, y, z)] = cos(da) + cos(db) + cos(dc) + cos(dd) + cos(da) * cos(db) * cos(dc) * cos(dd);
 							//dataset[INDEX(x, y, z)] = r1 * cos(de) + r2 * cos(df) + r3 * cos(dg) + r4 * cos(dh);
 							//dataset[INDEX(x, y, z)] = cos(da)*(2 * PI - da) / (2 * PI) + cos(db)*(2 * PI - db) / (2 * PI) + cos(dc)*(2 * PI - dc) / (2 * PI) + cos(dd)*(2 * PI - dd) / (2 * PI);
-							//dataset[INDEX(x, y, z)] = cos(da)*(da) / (2 * PI) + cos(db)*(db) / (2 * PI) + cos(dc)*(dc) / (2 * PI) + cos(dd)*(dd) / (2 * PI);
-							dataset[INDEX(x, y, z)] = cos(l / length * 2 * PI);
+							dataset[INDEX(x, y, z)] = cos(da)*(da) / (2 * PI) + cos(db)*(db) / (2 * PI) + cos(dc)*(dc) / (2 * PI) + cos(dd)*(dd) / (2 * PI);
+							//dataset[INDEX(x, y, z)] = cos(l / length * 2 * PI);
 							break;
 						case D:
 							dataset[INDEX(x, y, z)] = sin(da) * cos(db)	* cos(dc) * cos(dd) + cos(da) * sin(db)	* cos(dc) * cos(dd) + cos(da) * cos(db)	* sin(dc) * cos(dd) + cos(da) * cos(db)	* cos(dc) * sin(dd) + cos(da) * cos(db)	* cos(dc) * cos(dd);
@@ -865,7 +865,7 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 				}
 			}
 
-	//float porosity = inside / total;
+	float porosity = inside / total;
 
 	// Allocate memory
 	surfmesh = (SURFACEMESH *)malloc(sizeof(SURFACEMESH));
