@@ -2,7 +2,7 @@
 #define SQRT_TWO 1.41421356237
 #define SQRT_TREEE 1.73205080757
 
-#define DIM 200 // Number of the cells on each dimension
+#define DIM 400 // Number of the cells on each dimension
 
 typedef enum {
 	P, D, G
@@ -43,13 +43,8 @@ typedef struct {
 } SURFACEMESH;
 
 void init(POINT *vertice, TETRAHEDRON *tetra, int num_tetra);
-void makePlane(const POINT *p1, const POINT *p2, const POINT *p3, const POINT *p4, PLANE *plane);
-float distToPlane(const POINT *v, const PLANE *p);
 void generateDataset(float* dataset, TETRAHEDRON *tetra, int num, SURFACE_TYPE type);
 SURFACEMESH* marchingCube(float* dataset, float isovalue);
 void wirteOFF(SURFACEMESH *surface, char *name);
-float distBTPoints(POINT *p1, POINT *p2);
-float volumeOfTetra(TETRAHEDRON *tetra);
 void writeRawiv(float *dataset, char* name);
-void scaleDataset(float *dataset);
 float convertThres(float *dataset, int thres);

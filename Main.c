@@ -180,7 +180,7 @@ int main() {
 	vertice[2].y = SQRT_TREEE;
 	vertice[2].z = 0;
 
-	vertice[3].x = 0;
+	vertice[3].x = 3;
 	vertice[3].y = SQRT_TREEE / 3;
 	vertice[3].z = 2 * SQRT_TWO / SQRT_TREEE;
 
@@ -196,7 +196,7 @@ int main() {
 	vertice[6].y = SQRT_TREEE;
 	vertice[6].z = 0;
 
-	vertice[7].x = 0;
+	vertice[7].x = 3;
 	vertice[7].y = SQRT_TREEE / 3;
 	vertice[7].z = -2 * SQRT_TWO / SQRT_TREEE;
 
@@ -234,12 +234,6 @@ int main() {
 	clock_t start = clock(), diff;
 
 	SURFACEMESH *surfmesh = (SURFACEMESH *)marchingCube(array, thres);
-
-	int i = 1000;
-	while (i < 1100) {
-		printf("%f ", array[i]);
-		i++;
-	}
 
 	diff = clock() - start;
 
