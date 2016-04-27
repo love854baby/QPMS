@@ -7,7 +7,7 @@
 
 #define OUTSIDE FLT_MAX
 
-int index(int x, int y, int z);
+int indexVect(int x, int y, int z);
 void makePlane(const POINT *p1, const POINT *p2, const POINT *p3, const POINT *p4, PLANE *plane);
 float distToPlane(const POINT *v, const PLANE *p);
 float distBTPoints(POINT *p1, POINT *p2);
@@ -310,7 +310,7 @@ const int triTable[256][16] = {
 
 int xdim, ydim, zdim;
 
-int index(int x, int y, int z) {
+int indexVect(int x, int y, int z) {
 	return x + y * xdim + z * xdim * ydim;
 }
 
@@ -493,17 +493,17 @@ float* generateDataset(TETRAHEDRON *tetra, SURFACE_TYPE type, int size) {
 
 						switch (type) {
 						case P:
-							//dataset[index(x, y, z)] = cos(da) + cos(db) + cos(dc) + cos(dd) + cos(da) * cos(db) * cos(dc) * cos(dd);
-							//dataset[index(x, y, z)] = r1 * cos(de) + r2 * cos(df) + r3 * cos(dg) + r4 * cos(dh);
-							//dataset[index(x, y, z)] = cos(da)*(2 * PI - da) / (2 * PI) + cos(db)*(2 * PI - db) / (2 * PI) + cos(dc)*(2 * PI - dc) / (2 * PI) + cos(dd)*(2 * PI - dd) / (2 * PI);
-							dataset[index(x, y, z)] = cos(da)*(da) / (2 * PI) + cos(db)*(db) / (2 * PI) + cos(dc)*(dc) / (2 * PI) + cos(dd)*(dd) / (2 * PI);
-							//dataset[index(x, y, z)] = cos(l / length * 2 * PI);
+							//dataset[indexVect(x, y, z)] = cos(da) + cos(db) + cos(dc) + cos(dd) + cos(da) * cos(db) * cos(dc) * cos(dd);
+							//dataset[indexVect(x, y, z)] = r1 * cos(de) + r2 * cos(df) + r3 * cos(dg) + r4 * cos(dh);
+							//dataset[indexVect(x, y, z)] = cos(da)*(2 * PI - da) / (2 * PI) + cos(db)*(2 * PI - db) / (2 * PI) + cos(dc)*(2 * PI - dc) / (2 * PI) + cos(dd)*(2 * PI - dd) / (2 * PI);
+							dataset[indexVect(x, y, z)] = cos(da)*(da) / (2 * PI) + cos(db)*(db) / (2 * PI) + cos(dc)*(dc) / (2 * PI) + cos(dd)*(dd) / (2 * PI);
+							//dataset[indexVect(x, y, z)] = cos(l / length * 2 * PI);
 							break;
 						case D:
-							dataset[index(x, y, z)] = sin(da) * cos(db)	* cos(dc) * cos(dd) + cos(da) * sin(db)	* cos(dc) * cos(dd) + cos(da) * cos(db)	* sin(dc) * cos(dd) + cos(da) * cos(db)	* cos(dc) * sin(dd) + cos(da) * cos(db)	* cos(dc) * cos(dd);
+							dataset[indexVect(x, y, z)] = sin(da) * cos(db)	* cos(dc) * cos(dd) + cos(da) * sin(db)	* cos(dc) * cos(dd) + cos(da) * cos(db)	* sin(dc) * cos(dd) + cos(da) * cos(db)	* cos(dc) * sin(dd) + cos(da) * cos(db)	* cos(dc) * cos(dd);
 							break;
 						case G:
-							dataset[index(x, y, z)] = cos(da) * sin(db) + cos(db) * sin(dc) + cos(dc) * sin(dd) + cos(dd) * sin(da) + cos(da) * cos(db)	* cos(dc) * cos(dd);
+							dataset[indexVect(x, y, z)] = cos(da) * sin(db) + cos(db) * sin(dc) + cos(dc) * sin(dd) + cos(dd) * sin(da) + cos(da) * cos(db)	* cos(dc) * cos(dd);
 							break;
 						}
 					}
@@ -544,7 +544,7 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 	POINT *vertex;
 	TRIANGLE *triangle, *mc_edge;
 	int cellVerts[12];
-	unsigned char cellIndex;
+	unsigned char cellindexVect;
 	unsigned char *mc_sign;
 	SURFACEMESH *surfmesh;
 
@@ -559,19 +559,19 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 	for (k = 0; k < zdim; k++)
 		for (j = 0; j < ydim; j++)
 			for (i = 0; i < xdim; i++) {
-				if (dataset[index(i, j, k)] > isovalue - 0.0001 && dataset[index(i, j, k)] < isovalue + 0.0001)
-					dataset[index(i, j, k)] = isovalue + 0.0001;
+				if (dataset[indexVect(i, j, k)] > isovalue - 0.0001 && dataset[indexVect(i, j, k)] < isovalue + 0.0001)
+					dataset[indexVect(i, j, k)] = isovalue + 0.0001;
 
-				if (dataset[index(i, j, k)] >= OUTSIDE - 10)
-					mc_sign[index(i, j, k)] = 50;
-				else if (dataset[index(i, j, k)] >= isovalue)
-					mc_sign[index(i, j, k)] = 1;
+				if (dataset[indexVect(i, j, k)] >= OUTSIDE - 10)
+					mc_sign[indexVect(i, j, k)] = 50;
+				else if (dataset[indexVect(i, j, k)] >= isovalue)
+					mc_sign[indexVect(i, j, k)] = 1;
 				else
-					mc_sign[index(i, j, k)] = 255;
+					mc_sign[indexVect(i, j, k)] = 255;
 
-				mc_edge[index(i, j, k)].a = -1;
-				mc_edge[index(i, j, k)].b = -1;
-				mc_edge[index(i, j, k)].c = -1;
+				mc_edge[indexVect(i, j, k)].a = -1;
+				mc_edge[indexVect(i, j, k)].b = -1;
+				mc_edge[indexVect(i, j, k)].c = -1;
 			}
 
 	int inside = 0;
@@ -583,48 +583,48 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 
 				total++;
 
-				if (mc_sign[index(tempt_x, tempt_y, tempt_z)] == 255)
+				if (mc_sign[indexVect(tempt_x, tempt_y, tempt_z)] == 255)
 					inside++;
 
 				for (ii = 0; ii < 12; ii++)
 					cellVerts[ii] = -1;
 
-				cellIndex = 0;
+				cellindexVect = 0;
 
-				if (mc_sign[index(tempt_x, tempt_y, tempt_z)] == 50 || mc_sign[index(tempt_x, tempt_y + 1, tempt_z)] == 50
-					|| mc_sign[index(tempt_x + 1, tempt_y + 1, tempt_z)] == 50 || mc_sign[index(tempt_x + 1, tempt_y, tempt_z)] == 50
-					|| mc_sign[index(tempt_x, tempt_y, tempt_z + 1)] == 50 || mc_sign[index(tempt_x, tempt_y + 1, tempt_z + 1)] == 50
-					|| mc_sign[index(tempt_x + 1, tempt_y + 1, tempt_z + 1)] == 50 || mc_sign[index(tempt_x + 1, tempt_y, tempt_z + 1)] == 50)
+				if (mc_sign[indexVect(tempt_x, tempt_y, tempt_z)] == 50 || mc_sign[indexVect(tempt_x, tempt_y + 1, tempt_z)] == 50
+					|| mc_sign[indexVect(tempt_x + 1, tempt_y + 1, tempt_z)] == 50 || mc_sign[indexVect(tempt_x + 1, tempt_y, tempt_z)] == 50
+					|| mc_sign[indexVect(tempt_x, tempt_y, tempt_z + 1)] == 50 || mc_sign[indexVect(tempt_x, tempt_y + 1, tempt_z + 1)] == 50
+					|| mc_sign[indexVect(tempt_x + 1, tempt_y + 1, tempt_z + 1)] == 50 || mc_sign[indexVect(tempt_x + 1, tempt_y, tempt_z + 1)] == 50)
 					continue;
 
-				if (mc_sign[index(tempt_x, tempt_y, tempt_z)] == 255)
-					cellIndex |= 1;
+				if (mc_sign[indexVect(tempt_x, tempt_y, tempt_z)] == 255)
+					cellindexVect |= 1;
 
-				if (mc_sign[index(tempt_x, tempt_y + 1, tempt_z)] == 255)
-					cellIndex |= 2;
+				if (mc_sign[indexVect(tempt_x, tempt_y + 1, tempt_z)] == 255)
+					cellindexVect |= 2;
 
-				if (mc_sign[index(tempt_x + 1, tempt_y + 1, tempt_z)] == 255)
-					cellIndex |= 4;
+				if (mc_sign[indexVect(tempt_x + 1, tempt_y + 1, tempt_z)] == 255)
+					cellindexVect |= 4;
 
-				if (mc_sign[index(tempt_x + 1, tempt_y, tempt_z)] == 255)
-					cellIndex |= 8;
+				if (mc_sign[indexVect(tempt_x + 1, tempt_y, tempt_z)] == 255)
+					cellindexVect |= 8;
 
-				if (mc_sign[index(tempt_x, tempt_y, tempt_z + 1)] == 255)
-					cellIndex |= 16;
+				if (mc_sign[indexVect(tempt_x, tempt_y, tempt_z + 1)] == 255)
+					cellindexVect |= 16;
 
-				if (mc_sign[index(tempt_x, tempt_y + 1, tempt_z + 1)] == 255)
-					cellIndex |= 32;
+				if (mc_sign[indexVect(tempt_x, tempt_y + 1, tempt_z + 1)] == 255)
+					cellindexVect |= 32;
 
-				if (mc_sign[index(tempt_x + 1, tempt_y + 1, tempt_z + 1)] == 255)
-					cellIndex |= 64;
+				if (mc_sign[indexVect(tempt_x + 1, tempt_y + 1, tempt_z + 1)] == 255)
+					cellindexVect |= 64;
 
-				if (mc_sign[index(tempt_x + 1, tempt_y, tempt_z + 1)] == 255)
-					cellIndex |= 128;
+				if (mc_sign[indexVect(tempt_x + 1, tempt_y, tempt_z + 1)] == 255)
+					cellindexVect |= 128;
 
-				if (edgeTable[cellIndex] & 1) {
-					if (mc_edge[index(tempt_x, tempt_y, tempt_z)].b == -1) {
-						den1 = dataset[index(tempt_x, tempt_y, tempt_z)];
-						den2 = dataset[index(tempt_x, tempt_y + 1, tempt_z)];
+				if (edgeTable[cellindexVect] & 1) {
+					if (mc_edge[indexVect(tempt_x, tempt_y, tempt_z)].b == -1) {
+						den1 = dataset[indexVect(tempt_x, tempt_y, tempt_z)];
+						den2 = dataset[indexVect(tempt_x, tempt_y + 1, tempt_z)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -635,18 +635,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y + ratio;
 						vertex[v_num].z = tempt_z;
 						cellVerts[0] = v_num;
-						mc_edge[index(tempt_x, tempt_y, tempt_z)].b = v_num;
+						mc_edge[indexVect(tempt_x, tempt_y, tempt_z)].b = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[0] = mc_edge[index(tempt_x, tempt_y, tempt_z)].b;
+						cellVerts[0] = mc_edge[indexVect(tempt_x, tempt_y, tempt_z)].b;
 				}
 
-				if (edgeTable[cellIndex] & 2) {
-					if (mc_edge[index(tempt_x, tempt_y + 1, tempt_z)].a == -1) {
+				if (edgeTable[cellindexVect] & 2) {
+					if (mc_edge[indexVect(tempt_x, tempt_y + 1, tempt_z)].a == -1) {
 
-						den1 = dataset[index(tempt_x, tempt_y + 1, tempt_z)];
-						den2 = dataset[index(tempt_x + 1, tempt_y + 1, tempt_z)];
+						den1 = dataset[indexVect(tempt_x, tempt_y + 1, tempt_z)];
+						den2 = dataset[indexVect(tempt_x + 1, tempt_y + 1, tempt_z)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -657,18 +657,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y + 1;
 						vertex[v_num].z = tempt_z;
 						cellVerts[1] = v_num;
-						mc_edge[index(tempt_x, tempt_y + 1, tempt_z)].a = v_num;
+						mc_edge[indexVect(tempt_x, tempt_y + 1, tempt_z)].a = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[1] = mc_edge[index(tempt_x, tempt_y + 1, tempt_z)].a;
+						cellVerts[1] = mc_edge[indexVect(tempt_x, tempt_y + 1, tempt_z)].a;
 				}
 
-				if (edgeTable[cellIndex] & 4) {
-					if (mc_edge[index(tempt_x + 1, tempt_y, tempt_z)].b == -1) {
+				if (edgeTable[cellindexVect] & 4) {
+					if (mc_edge[indexVect(tempt_x + 1, tempt_y, tempt_z)].b == -1) {
 
-						den1 = dataset[index(tempt_x + 1, tempt_y, tempt_z)];
-						den2 = dataset[index(tempt_x + 1, tempt_y + 1, tempt_z)];
+						den1 = dataset[indexVect(tempt_x + 1, tempt_y, tempt_z)];
+						den2 = dataset[indexVect(tempt_x + 1, tempt_y + 1, tempt_z)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -679,18 +679,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y + ratio;
 						vertex[v_num].z = tempt_z;
 						cellVerts[2] = v_num;
-						mc_edge[index(tempt_x + 1, tempt_y, tempt_z)].b = v_num;
+						mc_edge[indexVect(tempt_x + 1, tempt_y, tempt_z)].b = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[2] = mc_edge[index(tempt_x + 1, tempt_y, tempt_z)].b;
+						cellVerts[2] = mc_edge[indexVect(tempt_x + 1, tempt_y, tempt_z)].b;
 				}
 
-				if (edgeTable[cellIndex] & 8) {
-					if (mc_edge[index(tempt_x, tempt_y, tempt_z)].a == -1) {
+				if (edgeTable[cellindexVect] & 8) {
+					if (mc_edge[indexVect(tempt_x, tempt_y, tempt_z)].a == -1) {
 
-						den1 = dataset[index(tempt_x, tempt_y, tempt_z)];
-						den2 = dataset[index(tempt_x + 1, tempt_y, tempt_z)];
+						den1 = dataset[indexVect(tempt_x, tempt_y, tempt_z)];
+						den2 = dataset[indexVect(tempt_x + 1, tempt_y, tempt_z)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -701,18 +701,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y;
 						vertex[v_num].z = tempt_z;
 						cellVerts[3] = v_num;
-						mc_edge[index(tempt_x, tempt_y, tempt_z)].a = v_num;
+						mc_edge[indexVect(tempt_x, tempt_y, tempt_z)].a = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[3] = mc_edge[index(tempt_x, tempt_y, tempt_z)].a;
+						cellVerts[3] = mc_edge[indexVect(tempt_x, tempt_y, tempt_z)].a;
 				}
 
-				if (edgeTable[cellIndex] & 16) {
-					if (mc_edge[index(tempt_x, tempt_y, tempt_z + 1)].b == -1) {
+				if (edgeTable[cellindexVect] & 16) {
+					if (mc_edge[indexVect(tempt_x, tempt_y, tempt_z + 1)].b == -1) {
 
-						den1 = dataset[index(tempt_x, tempt_y, tempt_z + 1)];
-						den2 = dataset[index(tempt_x, tempt_y + 1, tempt_z + 1)];
+						den1 = dataset[indexVect(tempt_x, tempt_y, tempt_z + 1)];
+						den2 = dataset[indexVect(tempt_x, tempt_y + 1, tempt_z + 1)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -723,18 +723,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y + ratio;
 						vertex[v_num].z = tempt_z + 1;
 						cellVerts[4] = v_num;
-						mc_edge[index(tempt_x, tempt_y, tempt_z + 1)].b = v_num;
+						mc_edge[indexVect(tempt_x, tempt_y, tempt_z + 1)].b = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[4] = mc_edge[index(tempt_x, tempt_y, tempt_z + 1)].b;
+						cellVerts[4] = mc_edge[indexVect(tempt_x, tempt_y, tempt_z + 1)].b;
 				}
 
-				if (edgeTable[cellIndex] & 32) {
-					if (mc_edge[index(tempt_x, tempt_y + 1, tempt_z + 1)].a == -1) {
+				if (edgeTable[cellindexVect] & 32) {
+					if (mc_edge[indexVect(tempt_x, tempt_y + 1, tempt_z + 1)].a == -1) {
 
-						den1 = dataset[index(tempt_x, tempt_y + 1, tempt_z + 1)];
-						den2 = dataset[index(tempt_x + 1, tempt_y + 1, tempt_z + 1)];
+						den1 = dataset[indexVect(tempt_x, tempt_y + 1, tempt_z + 1)];
+						den2 = dataset[indexVect(tempt_x + 1, tempt_y + 1, tempt_z + 1)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -745,18 +745,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y + 1;
 						vertex[v_num].z = tempt_z + 1;
 						cellVerts[5] = v_num;
-						mc_edge[index(tempt_x, tempt_y + 1, tempt_z + 1)].a = v_num;
+						mc_edge[indexVect(tempt_x, tempt_y + 1, tempt_z + 1)].a = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[5] = mc_edge[index(tempt_x, tempt_y + 1, tempt_z + 1)].a;
+						cellVerts[5] = mc_edge[indexVect(tempt_x, tempt_y + 1, tempt_z + 1)].a;
 				}
 
-				if (edgeTable[cellIndex] & 64) {
-					if (mc_edge[index(tempt_x + 1, tempt_y, tempt_z + 1)].b == -1) {
+				if (edgeTable[cellindexVect] & 64) {
+					if (mc_edge[indexVect(tempt_x + 1, tempt_y, tempt_z + 1)].b == -1) {
 
-						den1 = dataset[index(tempt_x + 1, tempt_y, tempt_z + 1)];
-						den2 = dataset[index(tempt_x + 1, tempt_y + 1, tempt_z + 1)];
+						den1 = dataset[indexVect(tempt_x + 1, tempt_y, tempt_z + 1)];
+						den2 = dataset[indexVect(tempt_x + 1, tempt_y + 1, tempt_z + 1)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -767,18 +767,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y + ratio;
 						vertex[v_num].z = tempt_z + 1;
 						cellVerts[6] = v_num;
-						mc_edge[index(tempt_x + 1, tempt_y, tempt_z + 1)].b = v_num;
+						mc_edge[indexVect(tempt_x + 1, tempt_y, tempt_z + 1)].b = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[6] = mc_edge[index(tempt_x + 1, tempt_y, tempt_z + 1)].b;
+						cellVerts[6] = mc_edge[indexVect(tempt_x + 1, tempt_y, tempt_z + 1)].b;
 				}
 
-				if (edgeTable[cellIndex] & 128) {
-					if (mc_edge[index(tempt_x, tempt_y, tempt_z + 1)].a == -1) {
+				if (edgeTable[cellindexVect] & 128) {
+					if (mc_edge[indexVect(tempt_x, tempt_y, tempt_z + 1)].a == -1) {
 
-						den1 = dataset[index(tempt_x, tempt_y, tempt_z + 1)];
-						den2 = dataset[index(tempt_x + 1, tempt_y, tempt_z + 1)];
+						den1 = dataset[indexVect(tempt_x, tempt_y, tempt_z + 1)];
+						den2 = dataset[indexVect(tempt_x + 1, tempt_y, tempt_z + 1)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -789,18 +789,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y;
 						vertex[v_num].z = tempt_z + 1;
 						cellVerts[7] = v_num;
-						mc_edge[index(tempt_x, tempt_y, tempt_z + 1)].a = v_num;
+						mc_edge[indexVect(tempt_x, tempt_y, tempt_z + 1)].a = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[7] = mc_edge[index(tempt_x, tempt_y, tempt_z + 1)].a;
+						cellVerts[7] = mc_edge[indexVect(tempt_x, tempt_y, tempt_z + 1)].a;
 				}
 
-				if (edgeTable[cellIndex] & 256) {
-					if (mc_edge[index(tempt_x, tempt_y, tempt_z)].c == -1) {
+				if (edgeTable[cellindexVect] & 256) {
+					if (mc_edge[indexVect(tempt_x, tempt_y, tempt_z)].c == -1) {
 
-						den1 = dataset[index(tempt_x, tempt_y, tempt_z)];
-						den2 = dataset[index(tempt_x, tempt_y, tempt_z + 1)];
+						den1 = dataset[indexVect(tempt_x, tempt_y, tempt_z)];
+						den2 = dataset[indexVect(tempt_x, tempt_y, tempt_z + 1)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -811,18 +811,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y;
 						vertex[v_num].z = tempt_z + ratio;
 						cellVerts[8] = v_num;
-						mc_edge[index(tempt_x, tempt_y, tempt_z)].c = v_num;
+						mc_edge[indexVect(tempt_x, tempt_y, tempt_z)].c = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[8] = mc_edge[index(tempt_x, tempt_y, tempt_z)].c;
+						cellVerts[8] = mc_edge[indexVect(tempt_x, tempt_y, tempt_z)].c;
 				}
 
-				if (edgeTable[cellIndex] & 512) {
-					if (mc_edge[index(tempt_x, tempt_y + 1, tempt_z)].c == -1) {
+				if (edgeTable[cellindexVect] & 512) {
+					if (mc_edge[indexVect(tempt_x, tempt_y + 1, tempt_z)].c == -1) {
 
-						den1 = dataset[index(tempt_x, tempt_y + 1, tempt_z)];
-						den2 = dataset[index(tempt_x, tempt_y + 1, tempt_z + 1)];
+						den1 = dataset[indexVect(tempt_x, tempt_y + 1, tempt_z)];
+						den2 = dataset[indexVect(tempt_x, tempt_y + 1, tempt_z + 1)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -833,18 +833,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y + 1;
 						vertex[v_num].z = tempt_z + ratio;
 						cellVerts[9] = v_num;
-						mc_edge[index(tempt_x, tempt_y + 1, tempt_z)].c = v_num;
+						mc_edge[indexVect(tempt_x, tempt_y + 1, tempt_z)].c = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[9] = mc_edge[index(tempt_x, tempt_y + 1, tempt_z)].c;
+						cellVerts[9] = mc_edge[indexVect(tempt_x, tempt_y + 1, tempt_z)].c;
 				}
 
-				if (edgeTable[cellIndex] & 1024) {
-					if (mc_edge[index(tempt_x + 1, tempt_y + 1, tempt_z)].c == -1) {
+				if (edgeTable[cellindexVect] & 1024) {
+					if (mc_edge[indexVect(tempt_x + 1, tempt_y + 1, tempt_z)].c == -1) {
 
-						den1 = dataset[index(tempt_x + 1, tempt_y + 1, tempt_z)];
-						den2 = dataset[index(tempt_x + 1, tempt_y + 1, tempt_z + 1)];
+						den1 = dataset[indexVect(tempt_x + 1, tempt_y + 1, tempt_z)];
+						den2 = dataset[indexVect(tempt_x + 1, tempt_y + 1, tempt_z + 1)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -855,18 +855,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y + 1;
 						vertex[v_num].z = tempt_z + ratio;
 						cellVerts[10] = v_num;
-						mc_edge[index(tempt_x + 1, tempt_y + 1, tempt_z)].c = v_num;
+						mc_edge[indexVect(tempt_x + 1, tempt_y + 1, tempt_z)].c = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[10] = mc_edge[index(tempt_x + 1, tempt_y + 1, tempt_z)].c;
+						cellVerts[10] = mc_edge[indexVect(tempt_x + 1, tempt_y + 1, tempt_z)].c;
 				}
 
-				if (edgeTable[cellIndex] & 2048) {
-					if (mc_edge[index(tempt_x + 1, tempt_y, tempt_z)].c == -1) {
+				if (edgeTable[cellindexVect] & 2048) {
+					if (mc_edge[indexVect(tempt_x + 1, tempt_y, tempt_z)].c == -1) {
 
-						den1 = dataset[index(tempt_x + 1, tempt_y, tempt_z)];
-						den2 = dataset[index(tempt_x + 1, tempt_y, tempt_z + 1)];
+						den1 = dataset[indexVect(tempt_x + 1, tempt_y, tempt_z)];
+						den2 = dataset[indexVect(tempt_x + 1, tempt_y, tempt_z + 1)];
 
 						if (den1 != den2)
 							ratio = (isovalue - den1) / (den2 - den1);
@@ -877,18 +877,18 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 						vertex[v_num].y = tempt_y;
 						vertex[v_num].z = tempt_z + ratio;
 						cellVerts[11] = v_num;
-						mc_edge[index(tempt_x + 1, tempt_y, tempt_z)].c = v_num;
+						mc_edge[indexVect(tempt_x + 1, tempt_y, tempt_z)].c = v_num;
 						v_num++;
 					}
 					else
-						cellVerts[11] = mc_edge[index(tempt_x + 1, tempt_y, tempt_z)].c;
+						cellVerts[11] = mc_edge[indexVect(tempt_x + 1, tempt_y, tempt_z)].c;
 				}
 
 				ii = 0;
-				while (triTable[cellIndex][ii] != -1) {
-					triangle[t_num].a = cellVerts[triTable[cellIndex][ii++]];
-					triangle[t_num].b = cellVerts[triTable[cellIndex][ii++]];
-					triangle[t_num].c = cellVerts[triTable[cellIndex][ii++]];
+				while (triTable[cellindexVect][ii] != -1) {
+					triangle[t_num].a = cellVerts[triTable[cellindexVect][ii++]];
+					triangle[t_num].b = cellVerts[triTable[cellindexVect][ii++]];
+					triangle[t_num].c = cellVerts[triTable[cellindexVect][ii++]];
 					t_num++;
 				}
 			}
