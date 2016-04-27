@@ -167,7 +167,7 @@ int main() {
 	vertice[78] = v5;
 	vertice[79] = v12;
 	*/
-
+	
 	vertice[0].x = 1;
 	vertice[0].y = 0;
 	vertice[0].z = 0;
@@ -180,7 +180,7 @@ int main() {
 	vertice[2].y = SQRT_TREEE;
 	vertice[2].z = 0;
 
-	vertice[3].x = 3;
+	vertice[3].x = 0;
 	vertice[3].y = SQRT_TREEE / 3;
 	vertice[3].z = 2 * SQRT_TWO / SQRT_TREEE;
 
@@ -196,9 +196,10 @@ int main() {
 	vertice[6].y = SQRT_TREEE;
 	vertice[6].z = 0;
 
-	vertice[7].x = 3;
+	vertice[7].x = 0;
 	vertice[7].y = SQRT_TREEE / 3;
 	vertice[7].z = -2 * SQRT_TWO / SQRT_TREEE;
+	
 
 	/*
 	vertice[0].x = 1;
@@ -218,16 +219,19 @@ int main() {
 	vertice[3].z = 1;
 	*/
 
-	float *array = (float *)malloc(sizeof(float)* DIM * DIM * DIM);
-
 	//Set surface type here
 	SURFACE_TYPE type = P;
 
-	TETRAHEDRON *tetra = (TETRAHEDRON *)malloc(sizeof(TETRAHEDRON) * numOfTetra);
+	int *size = (int *)malloc(sizeof(int));
 
-	init(vertice, tetra, numOfTetra);
+	//TETRAHEDRON *tetra = (TETRAHEDRON *)malloc(sizeof(TETRAHEDRON) * numOfTetra);
+	//*size = numOfTetra;
+	//initWithVers(vertice, tetra, *size);
+	
+	TETRAHEDRON *tetra = readTet("bone_tet_4.tet", size);
+	init(tetra, *size);
 
-	generateDataset(array, tetra, numOfTetra, type);
+	float *array = generateDataset(tetra, type, *size);
 
 	float thres = convertThres(array, 88);
 

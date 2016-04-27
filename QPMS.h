@@ -1,8 +1,11 @@
+#pragma once
+
 #define PI 3.14159265358979323846
 #define SQRT_TWO 1.41421356237
 #define SQRT_TREEE 1.73205080757
 
-#define DIM 400 // Number of the cells on each dimension
+#define DIM 10000 // Number of the cells on each dimension
+#define PD 1  // Max periods from three dimensions
 
 typedef enum {
 	P, D, G
@@ -42,9 +45,11 @@ typedef struct {
 	TRIANGLE* triangles; //pointer to the triangles
 } SURFACEMESH;
 
-void init(POINT *vertice, TETRAHEDRON *tetra, int num_tetra);
-void generateDataset(float* dataset, TETRAHEDRON *tetra, int num, SURFACE_TYPE type);
+void initWithVers(POINT *vertice, TETRAHEDRON *tetra, int size);
+void init(TETRAHEDRON *tetra, int size);
+float* generateDataset(TETRAHEDRON *tetra, SURFACE_TYPE type, int size);
 SURFACEMESH* marchingCube(float* dataset, float isovalue);
 void wirteOFF(SURFACEMESH *surface, char *name);
 void writeRawiv(float *dataset, char* name);
 float convertThres(float *dataset, int thres);
+TETRAHEDRON* readTet(char *name, int *size);

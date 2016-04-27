@@ -308,18 +308,15 @@ const int triTable[256][16] = {
 	{ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }
 };
 
+int xdim, ydim, zdim;
+
 int index(int x, int y, int z) {
-	return x + y * DIM + z * DIM * DIM;
+	return x + y * xdim + z * xdim * ydim;
 }
 
-void init(POINT *vertice, TETRAHEDRON *tetra, int num) {
+void init(TETRAHEDRON *tetra, int size) {
 	int i;
-	for (i = 0; i < num; i++) {
-		tetra[i].p1 = &vertice[i * 4];
-		tetra[i].p2 = &vertice[i * 4 + 1];
-		tetra[i].p3 = &vertice[i * 4 + 2];
-		tetra[i].p4 = &vertice[i * 4 + 3];
-
+	for (i = 0; i < size; i++) {
 		tetra[i].a = (PLANE *)malloc(sizeof(PLANE));
 		tetra[i].b = (PLANE *)malloc(sizeof(PLANE));
 		tetra[i].c = (PLANE *)malloc(sizeof(PLANE));
@@ -330,6 +327,18 @@ void init(POINT *vertice, TETRAHEDRON *tetra, int num) {
 		makePlane(tetra[i].p1, tetra[i].p2, tetra[i].p4, tetra[i].p3, tetra[i].c);
 		makePlane(tetra[i].p1, tetra[i].p2, tetra[i].p3, tetra[i].p4, tetra[i].d);
 	}
+}
+
+void initWithVers(POINT *vertice, TETRAHEDRON *tetra, int size) {
+	int i;
+	for (i = 0; i < size; i++) {
+		tetra[i].p1 = &vertice[i * 4];
+		tetra[i].p2 = &vertice[i * 4 + 1];
+		tetra[i].p3 = &vertice[i * 4 + 2];
+		tetra[i].p4 = &vertice[i * 4 + 3];
+	}
+
+	init(tetra, size);
 }
 
 void makePlane(const POINT *p1, const POINT *p2, const POINT *p3, const POINT *p4, PLANE *plane) {
@@ -373,17 +382,13 @@ float volumeOfTetra(TETRAHEDRON *tetra) {
 	return fabs(((x4 - x1) * ((y2 - y1) * (z3 - z1) - (z2 - z1) * (y3 - y1)) + (y4 - y1) * ((z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1)) + (z4 - z1) * ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1))) / 6);
 }
 
-void generateDataset(float* dataset, TETRAHEDRON *tetra, int num, SURFACE_TYPE type) {
+float* generateDataset(TETRAHEDRON *tetra, SURFACE_TYPE type, int size) {
 	int x, y, z, i;
 	float min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
 	float max_x = FLT_MIN, max_y = FLT_MIN, max_z = FLT_MIN;
 	float den;
 
-	for (i = 0; i < DIM * DIM * DIM; i++) {
-		dataset[i] = OUTSIDE;
-	}
-
-	for (i = 0; i < num; i++) {
+	for (i = 0; i < size; i++) {
 		min_x = fminf(min_x, fminf(fminf(fminf(tetra[i].p1->x, tetra[i].p2->x), tetra[i].p3->x), tetra[i].p4->x));
 		min_y = fminf(min_y, fminf(fminf(fminf(tetra[i].p1->y, tetra[i].p2->y), tetra[i].p3->y), tetra[i].p4->y));
 		min_z = fminf(min_z, fminf(fminf(fminf(tetra[i].p1->z, tetra[i].p2->z), tetra[i].p3->z), tetra[i].p4->z));
@@ -394,6 +399,16 @@ void generateDataset(float* dataset, TETRAHEDRON *tetra, int num, SURFACE_TYPE t
 	}
 
 	den = fmaxf(max_x - min_x, fmaxf(max_y - min_y, max_z - min_z)) / DIM;
+
+	xdim = ceil((max_x - min_x) / den);
+	ydim = ceil((max_y - min_y) / den);
+	zdim = ceil((max_z - min_z) / den);
+
+	float *dataset = (float *)malloc(sizeof(float) * xdim * ydim * zdim);
+
+	for (i = 0; i < xdim * ydim * zdim; i++) {
+		dataset[i] = OUTSIDE;
+	}
 
 	POINT *v = (POINT *)malloc(sizeof(POINT));
 
@@ -407,7 +422,7 @@ void generateDataset(float* dataset, TETRAHEDRON *tetra, int num, SURFACE_TYPE t
 	float r1, r2, r3, r4, length, l;
 	float volumn;
 
-	for (i = 0; i < num; i++) {
+	for (i = 0; i < size; i++) {
 
 		t1->p1 = tetra[i].p2;
 		t1->p2 = tetra[i].p3;
@@ -445,9 +460,9 @@ void generateDataset(float* dataset, TETRAHEDRON *tetra, int num, SURFACE_TYPE t
 
 		length = fmaxf(d5, fmaxf(d6, fmaxf(d7, fmaxf(d8, fmaxf(d9, d10)))));
 
-		for (x = 0; x < DIM; x++)
-			for (y = 0; y < DIM; y++)
-				for (z = 0; z < DIM; z++) {
+		for (x = 0; x < xdim; x++)
+			for (y = 0; y < ydim; y++)
+				for (z = 0; z < zdim; z++) {
 					v->x = min_x + x * den;
 					v->y = min_y + y * den;
 					v->z = min_z + z * den;
@@ -458,10 +473,11 @@ void generateDataset(float* dataset, TETRAHEDRON *tetra, int num, SURFACE_TYPE t
 					dd = distToPlane(v, tetra[i].d);
 
 					if (da >= 0 && db >= 0 && dc >= 0 && dd >= 0) {
-						da = da / d1 * 2 * PI;
-						db = db / d2 * 2 * PI;
-						dc = dc / d3 * 2 * PI;
-						dd = dd / d4 * 2 * PI;
+
+						da = da / d1 * 2 * PI * PD;
+						db = db / d2 * 2 * PI * PD;
+						dc = dc / d3 * 2 * PI * PD;
+						dd = dd / d4 * 2 * PI * PD;
 
 						de = distBTPoints(v, tetra[i].p1);
 						df = distBTPoints(v, tetra[i].p2);
@@ -479,8 +495,8 @@ void generateDataset(float* dataset, TETRAHEDRON *tetra, int num, SURFACE_TYPE t
 						case P:
 							//dataset[index(x, y, z)] = cos(da) + cos(db) + cos(dc) + cos(dd) + cos(da) * cos(db) * cos(dc) * cos(dd);
 							//dataset[index(x, y, z)] = r1 * cos(de) + r2 * cos(df) + r3 * cos(dg) + r4 * cos(dh);
-							dataset[index(x, y, z)] = cos(da)*(2 * PI - da) / (2 * PI) + cos(db)*(2 * PI - db) / (2 * PI) + cos(dc)*(2 * PI - dc) / (2 * PI) + cos(dd)*(2 * PI - dd) / (2 * PI);
-							//dataset[index(x, y, z)] = cos(da)*(da) / (2 * PI) + cos(db)*(db) / (2 * PI) + cos(dc)*(dc) / (2 * PI) + cos(dd)*(dd) / (2 * PI);
+							//dataset[index(x, y, z)] = cos(da)*(2 * PI - da) / (2 * PI) + cos(db)*(2 * PI - db) / (2 * PI) + cos(dc)*(2 * PI - dc) / (2 * PI) + cos(dd)*(2 * PI - dd) / (2 * PI);
+							dataset[index(x, y, z)] = cos(da)*(da) / (2 * PI) + cos(db)*(db) / (2 * PI) + cos(dc)*(dc) / (2 * PI) + cos(dd)*(dd) / (2 * PI);
 							//dataset[index(x, y, z)] = cos(l / length * 2 * PI);
 							break;
 						case D:
@@ -499,6 +515,8 @@ void generateDataset(float* dataset, TETRAHEDRON *tetra, int num, SURFACE_TYPE t
 	free(t3);
 	free(t4);
 	free(v);
+
+	return dataset;
 }
 
 void wirteOFF(SURFACEMESH *surface, char *name) {
@@ -530,17 +548,17 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 	unsigned char *mc_sign;
 	SURFACEMESH *surfmesh;
 
-	vertex = (POINT*)malloc(sizeof(POINT) * DIM * DIM * DIM);
-	triangle = (TRIANGLE*)malloc(sizeof(TRIANGLE) * DIM * DIM * DIM);
+	vertex = (POINT*)malloc(sizeof(POINT) * xdim * ydim * zdim);
+	triangle = (TRIANGLE*)malloc(sizeof(TRIANGLE) * xdim * ydim * zdim);
 	v_num = 0;
 	t_num = 0;
 
-	mc_edge = (TRIANGLE*)malloc(sizeof(TRIANGLE) * DIM * DIM * DIM);
-	mc_sign = (unsigned char*)malloc(sizeof(unsigned char) * DIM * DIM * DIM);
+	mc_edge = (TRIANGLE*)malloc(sizeof(TRIANGLE) * xdim * ydim * zdim);
+	mc_sign = (unsigned char*)malloc(sizeof(unsigned char) * xdim * ydim * zdim);
 
-	for (k = 0; k < DIM; k++)
-		for (j = 0; j < DIM; j++)
-			for (i = 0; i < DIM; i++) {
+	for (k = 0; k < zdim; k++)
+		for (j = 0; j < ydim; j++)
+			for (i = 0; i < xdim; i++) {
 				if (dataset[index(i, j, k)] > isovalue - 0.0001 && dataset[index(i, j, k)] < isovalue + 0.0001)
 					dataset[index(i, j, k)] = isovalue + 0.0001;
 
@@ -559,9 +577,9 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 	int inside = 0;
 	int total = 0;
 
-	for (tempt_z = 0; tempt_z < DIM - 1; tempt_z++)
-		for (tempt_y = 0; tempt_y < DIM - 1; tempt_y++)
-			for (tempt_x = 0; tempt_x < DIM - 1; tempt_x++) {
+	for (tempt_z = 0; tempt_z < zdim - 1; tempt_z++)
+		for (tempt_y = 0; tempt_y < ydim - 1; tempt_y++)
+			for (tempt_x = 0; tempt_x < xdim- 1; tempt_x++) {
 
 				total++;
 
@@ -875,7 +893,7 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 				}
 			}
 
-	float porosity = inside / total;
+	// float porosity = inside / total;
 
 	// Allocate memory
 	surfmesh = (SURFACEMESH *)malloc(sizeof(SURFACEMESH));
@@ -898,14 +916,14 @@ void writeRawiv(float* dataset, char* name) {
 	FILE *fp;
 	fp = fopen(name, "wb");
 
-	unsigned char *data = (unsigned char *)malloc(sizeof(unsigned char) * DIM * DIM * DIM);
+	unsigned char *data = (unsigned char *)malloc(sizeof(unsigned char) * xdim * ydim * zdim);
 
 	int i;
-	for (i = 0; i < DIM * DIM * DIM; i++) {
+	for (i = 0; i < xdim * ydim * zdim; i++) {
 		data[i] = (unsigned char)dataset[i];
 	}
 
-	write_rawiv_short(DIM, DIM, DIM, data, fp);
+	write_rawiv_short(xdim, ydim, zdim, data, fp);
 
 	fclose(fp);
 }
@@ -914,7 +932,7 @@ void scaleDataset(float *dataset) {
 	float min = FLT_MAX, max = FLT_MIN;
 
 	int i;
-	for (i = 0; i < DIM * DIM * DIM; i++) {
+	for (i = 0; i < xdim * ydim * zdim; i++) {
 		if (dataset[i] > OUTSIDE - 10)
 			continue;
 		if (dataset[i] < min)
@@ -925,7 +943,7 @@ void scaleDataset(float *dataset) {
 
 	float length = max - min;
 
-	for (i = 0; i < DIM * DIM * DIM; i++) {
+	for (i = 0; i < xdim * ydim * zdim; i++) {
 		if (dataset[i] > OUTSIDE - 10)
 			dataset[i] = 255;
 		else
@@ -937,7 +955,7 @@ float convertThres(float *dataset, int thres) {
 	float min = FLT_MAX, max = FLT_MIN;
 
 	int i;
-	for (i = 0; i < DIM * DIM * DIM; i++) {
+	for (i = 0; i < xdim * ydim * zdim; i++) {
 		if (dataset[i] >= OUTSIDE - 10)
 			continue;
 		if (dataset[i] < min)
@@ -947,4 +965,52 @@ float convertThres(float *dataset, int thres) {
 	}
 
 	return min + (max - min) * thres / 255;
+}
+
+TETRAHEDRON* readTet(char *name, int *size) {
+	int j, n, m, k;
+	int a, b, c, d, e, f, g, h, i;
+	float x, y, z;
+
+	char line[256];
+	FILE *fin;
+
+	if ((fin = fopen(name, "r+")) == NULL) {
+		printf("read error...\n");
+		exit(1);
+	};
+
+	/* OFF format */
+	while (fgets(line, 256, fin) != NULL) {
+		if (line[0] == 'T' && line[1] == 'E' && line[2] == 'T')
+			break;
+	}
+
+	fscanf(fin, "%d %d %d\n", &m, &n, &k);
+
+	POINT *points = (POINT *)malloc(sizeof(POINT) * m);
+	TETRAHEDRON *tetras = (TETRAHEDRON *)malloc(sizeof(TETRAHEDRON) * n);
+	*size = n;
+
+	for (j = 0; j < m; j++) {
+		fscanf(fin, "%f %f %f\n", &x, &y, &z);
+		points[j].x = x;
+		points[j].y = y;
+		points[j].z = z;
+	}
+
+	for (j = 0; j < n; j++) {
+		fscanf(fin, "%d %d %d %d %d %d %d %d %d\n", &a, &b, &c, &d, &e, &f, &g, &h, &i);
+		tetras[j].p1 = &points[b];
+		tetras[j].p2 = &points[c];
+		tetras[j].p3 = &points[d];
+		tetras[j].p4 = &points[e];
+		if (a != 4)
+			printf("Errors: reading surfmesh .... \n");
+	}
+
+	fclose(fin);
+	points = NULL;
+
+	return tetras;
 }
