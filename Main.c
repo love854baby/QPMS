@@ -222,17 +222,23 @@ int main() {
 	//Set surface type here
 	SURFACE_TYPE type = P;
 
-	int *size = (int *)malloc(sizeof(int));
+	int size, i;
 
-	//TETRAHEDRON *tetra = (TETRAHEDRON *)malloc(sizeof(TETRAHEDRON) * numOfTetra);
-	//*size = numOfTetra;
-	//initWithVers(vertice, tetra, *size);
+	TETRAHEDRON *tetra = readTet("bone_tet_4.tet", &size);
+
+	/*
+	TETRAHEDRON *tetra = (TETRAHEDRON *)malloc(sizeof(TETRAHEDRON) * numOfTetra);
+	for (i = 0; i < numOfTetra; i++) {
+		tetra[i].p1 = &vertice[i * 4];
+		tetra[i].p2 = &vertice[i * 4 + 1];
+		tetra[i].p3 = &vertice[i * 4 + 2];
+		tetra[i].p4 = &vertice[i * 4 + 3];
+	}
+	*/
 	
-	TETRAHEDRON *tetra = readTet("bone_tet_4.tet", size);
-	init(tetra, *size);
+	init(tetra, size);
 
-	float *array = generateDataset(tetra, type, *size);
-
+	float *array = generateDataset(tetra, type, size);
 	float thres = convertThres(array, 88);
 
 	clock_t start = clock(), diff;

@@ -4,7 +4,7 @@
 #define SQRT_TWO 1.41421356237
 #define SQRT_TREEE 1.73205080757
 
-#define DIM 10000 // Number of the cells on each dimension
+#define DIM 200 // Number of the cells on each dimension
 #define PD 1  // Max periods from three dimensions
 
 typedef enum {
@@ -45,7 +45,6 @@ typedef struct {
 	TRIANGLE* triangles; //pointer to the triangles
 } SURFACEMESH;
 
-void initWithVers(POINT *vertice, TETRAHEDRON *tetra, int size);
 void init(TETRAHEDRON *tetra, int size);
 float* generateDataset(TETRAHEDRON *tetra, SURFACE_TYPE type, int size);
 SURFACEMESH* marchingCube(float* dataset, float isovalue);

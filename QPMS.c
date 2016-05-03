@@ -13,6 +13,7 @@ float distToPlane(const POINT *v, const PLANE *p);
 float distBTPoints(POINT *p1, POINT *p2);
 float volumeOfTetra(TETRAHEDRON *tetra);
 void scaleDataset(float *dataset);
+float detMatrix(float m[16]);
 
 const int edgeTable[256] = {
 	0x0, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
@@ -309,13 +310,16 @@ const int triTable[256][16] = {
 };
 
 int xdim, ydim, zdim;
+float min_x, min_y, min_z, max_x, max_y, max_z, den;
+int *tetraIndex;
+float *dataset;
 
 int indexVect(int x, int y, int z) {
 	return x + y * xdim + z * xdim * ydim;
 }
 
 void init(TETRAHEDRON *tetra, int size) {
-	int i;
+	int i, x, y, z, index;
 	for (i = 0; i < size; i++) {
 		tetra[i].a = (PLANE *)malloc(sizeof(PLANE));
 		tetra[i].b = (PLANE *)malloc(sizeof(PLANE));
@@ -327,18 +331,64 @@ void init(TETRAHEDRON *tetra, int size) {
 		makePlane(tetra[i].p1, tetra[i].p2, tetra[i].p4, tetra[i].p3, tetra[i].c);
 		makePlane(tetra[i].p1, tetra[i].p2, tetra[i].p3, tetra[i].p4, tetra[i].d);
 	}
-}
 
-void initWithVers(POINT *vertice, TETRAHEDRON *tetra, int size) {
-	int i;
+	min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
+	max_x = FLT_MIN, max_y = FLT_MIN, max_z = FLT_MIN;
+
 	for (i = 0; i < size; i++) {
-		tetra[i].p1 = &vertice[i * 4];
-		tetra[i].p2 = &vertice[i * 4 + 1];
-		tetra[i].p3 = &vertice[i * 4 + 2];
-		tetra[i].p4 = &vertice[i * 4 + 3];
+		min_x = fminf(min_x, fminf(fminf(fminf(tetra[i].p1->x, tetra[i].p2->x), tetra[i].p3->x), tetra[i].p4->x));
+		min_y = fminf(min_y, fminf(fminf(fminf(tetra[i].p1->y, tetra[i].p2->y), tetra[i].p3->y), tetra[i].p4->y));
+		min_z = fminf(min_z, fminf(fminf(fminf(tetra[i].p1->z, tetra[i].p2->z), tetra[i].p3->z), tetra[i].p4->z));
+
+		max_x = fmaxf(max_x, fmaxf(fmaxf(fmaxf(tetra[i].p1->x, tetra[i].p2->x), tetra[i].p3->x), tetra[i].p4->x));
+		max_y = fmaxf(max_y, fmaxf(fmaxf(fmaxf(tetra[i].p1->y, tetra[i].p2->y), tetra[i].p3->y), tetra[i].p4->y));
+		max_z = fmaxf(max_z, fmaxf(fmaxf(fmaxf(tetra[i].p1->z, tetra[i].p2->z), tetra[i].p3->z), tetra[i].p4->z));
 	}
 
-	init(tetra, size);
+	den = fmaxf(max_x - min_x, fmaxf(max_y - min_y, max_z - min_z)) / DIM;
+	xdim = ceil((max_x - min_x) / den);
+	ydim = ceil((max_y - min_y) / den);
+	zdim = ceil((max_z - min_z) / den);
+	dataset = (float *)malloc(sizeof(float) * xdim * ydim * zdim);
+	tetraIndex = (int *)malloc(sizeof(int) * xdim * ydim * zdim);
+
+	for (i = 0; i < xdim * ydim * zdim; i++)
+		tetraIndex[i] = -1;
+
+	float m0[16], m1[16], m2[16], m3[16], m4[16];
+	POINT *a, *b, *c, *d;
+	float d0, d1, d2, d3, d4;
+	for (i = 0; i < size; i++) {
+		a = tetra[i].p1;
+		b = tetra[i].p2;
+		c = tetra[i].p3;
+		d = tetra[i].p4;
+		m0[0] = m2[0] = m3[0] = m4[0] = a->x;      m0[1] = m2[1] = m3[1] = m4[1] = a->y;      m0[2] = m2[2] = m3[2] = m4[2] = a->z;      m0[3] = m2[3] = m3[3] = m4[3] = 1;
+		m0[4] = m1[4] = m3[4] = m4[4] = b->x;      m0[5] = m1[5] = m3[5] = m4[5] = b->y;      m0[6] = m1[6] = m3[6] = m4[6] = b->z;      m0[7] = m1[7] = m3[7] = m4[7] = 1;
+		m0[8] = m1[8] = m2[8] = m4[8] = c->x;      m0[9] = m1[9] = m2[9] = m4[9] = c->y;      m0[10] = m1[10] = m2[10] = m4[10] = c->z;  m0[11] = m1[11] = m2[11] = m4[11] = 1;
+		m0[12] = m1[12] = m2[12] = m3[12] = d->x;  m0[13] = m1[13] = m2[13] = m3[13] = d->y;  m0[14] = m1[14] = m2[14] = m3[14] = d->z;  m0[15] = m1[15] = m2[15] = m3[15] = 1;
+		d0 = detMatrix(m0);
+
+		for (x = 0; x < xdim; x++)
+			for (y = 0; y < ydim; y++)
+				for (z = 0; z < zdim; z++) {
+					index = IndexVect(x, y, z);
+					if (tetraIndex[index] == -1) {
+						m1[0] = m2[4] = m3[8] = m4[12] = min_x + x * den;
+						m1[1] = m2[5] = m3[9] = m4[13] = min_y + y * den;
+						m1[2] = m2[6] = m3[10] = m4[14] = min_z + z * den;
+						d1 = detMatrix(m1); d2 = detMatrix(m2); d3 = detMatrix(m3); d4 = detMatrix(m4);
+						if (d0 > 0 && d1 > 0 && d2 > 0 && d3 > 0 && d4 > 0 || d0 < 0 && d1 < 0 && d2 < 0 && d3 < 0 && d4 < 0)
+							tetraIndex[index] = i;
+					}
+				}
+	}
+
+	a = NULL, b = NULL, c = NULL, d = NULL;
+}
+
+float detMatrix(float m[16]) {
+	return (m[0] * m[5] - m[1] * m[4]) * (m[10] * m[15] - m[11] * m[14]) - (m[2] * m[7] - m[3] * m[6]) * (m[8] * m[13] - m[9] * m[12]);
 }
 
 void makePlane(const POINT *p1, const POINT *p2, const POINT *p3, const POINT *p4, PLANE *plane) {
@@ -383,138 +433,92 @@ float volumeOfTetra(TETRAHEDRON *tetra) {
 }
 
 float* generateDataset(TETRAHEDRON *tetra, SURFACE_TYPE type, int size) {
-	int x, y, z, i;
-	float min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
-	float max_x = FLT_MIN, max_y = FLT_MIN, max_z = FLT_MIN;
-	float den;
-
-	for (i = 0; i < size; i++) {
-		min_x = fminf(min_x, fminf(fminf(fminf(tetra[i].p1->x, tetra[i].p2->x), tetra[i].p3->x), tetra[i].p4->x));
-		min_y = fminf(min_y, fminf(fminf(fminf(tetra[i].p1->y, tetra[i].p2->y), tetra[i].p3->y), tetra[i].p4->y));
-		min_z = fminf(min_z, fminf(fminf(fminf(tetra[i].p1->z, tetra[i].p2->z), tetra[i].p3->z), tetra[i].p4->z));
-
-		max_x = fmaxf(max_x, fmaxf(fmaxf(fmaxf(tetra[i].p1->x, tetra[i].p2->x), tetra[i].p3->x), tetra[i].p4->x));
-		max_y = fmaxf(max_y, fmaxf(fmaxf(fmaxf(tetra[i].p1->y, tetra[i].p2->y), tetra[i].p3->y), tetra[i].p4->y));
-		max_z = fmaxf(max_z, fmaxf(fmaxf(fmaxf(tetra[i].p1->z, tetra[i].p2->z), tetra[i].p3->z), tetra[i].p4->z));
-	}
-
-	den = fmaxf(max_x - min_x, fmaxf(max_y - min_y, max_z - min_z)) / DIM;
-
-	xdim = ceil((max_x - min_x) / den);
-	ydim = ceil((max_y - min_y) / den);
-	zdim = ceil((max_z - min_z) / den);
-
-	float *dataset = (float *)malloc(sizeof(float) * xdim * ydim * zdim);
+	int x, y, z, i, index;
+	float da, db, dc, dd, de, df, dg, dh;
+	float d1, d2, d3, d4, d5, d6, d7, d8, d9, d10;
+	float r1, r2, r3, r4, length, l;
+	float volumn;
 
 	for (i = 0; i < xdim * ydim * zdim; i++) {
 		dataset[i] = OUTSIDE;
 	}
 
 	POINT *v = (POINT *)malloc(sizeof(POINT));
-
-	TETRAHEDRON *t1 = (TETRAHEDRON *)malloc(sizeof(TETRAHEDRON));
-	TETRAHEDRON *t2 = (TETRAHEDRON *)malloc(sizeof(TETRAHEDRON));
-	TETRAHEDRON *t3 = (TETRAHEDRON *)malloc(sizeof(TETRAHEDRON));
-	TETRAHEDRON *t4 = (TETRAHEDRON *)malloc(sizeof(TETRAHEDRON));
-
-	float da, db, dc, dd, de, df, dg, dh;
-	float d1, d2, d3, d4, d5, d6, d7, d8, d9, d10;
-	float r1, r2, r3, r4, length, l;
-	float volumn;
-
-	for (i = 0; i < size; i++) {
-
-		t1->p1 = tetra[i].p2;
-		t1->p2 = tetra[i].p3;
-		t1->p3 = tetra[i].p4;
-		t1->p4 = v;
-
-		t2->p1 = tetra[i].p1;
-		t2->p2 = tetra[i].p3;
-		t2->p3 = tetra[i].p4;
-		t2->p4 = v;
-
-		t3->p1 = tetra[i].p1;
-		t3->p2 = tetra[i].p2;
-		t3->p3 = tetra[i].p4;
-		t3->p4 = v;
-
-		t4->p1 = tetra[i].p1;
-		t4->p2 = tetra[i].p2;
-		t4->p3 = tetra[i].p3;
-		t4->p4 = v;
-
-		volumn = volumeOfTetra(&tetra[i]);
-
-		d1 = distToPlane(tetra[i].p1, tetra[i].a);
-		d2 = distToPlane(tetra[i].p2, tetra[i].b);
-		d3 = distToPlane(tetra[i].p3, tetra[i].c);
-		d4 = distToPlane(tetra[i].p4, tetra[i].d);
-
-		d5 = distBTPoints(tetra[i].p1, tetra[i].p2);
-		d6 = distBTPoints(tetra[i].p1, tetra[i].p3);
-		d7 = distBTPoints(tetra[i].p1, tetra[i].p4);
-		d8 = distBTPoints(tetra[i].p2, tetra[i].p3);
-		d9 = distBTPoints(tetra[i].p2, tetra[i].p4);
-		d10 = distBTPoints(tetra[i].p3, tetra[i].p4);
-
-		length = fmaxf(d5, fmaxf(d6, fmaxf(d7, fmaxf(d8, fmaxf(d9, d10)))));
-
-		for (x = 0; x < xdim; x++)
-			for (y = 0; y < ydim; y++)
-				for (z = 0; z < zdim; z++) {
+	TETRAHEDRON t1, t2, t3, t4, *t;
+	for (x = 0; x < xdim; x++)
+		for (y = 0; y < ydim; y++)
+			for (z = 0; z < zdim; z++) {
+				index = indexVect(x, y, z);
+				i = tetraIndex[index];
+				if (i != -1) {
 					v->x = min_x + x * den;
 					v->y = min_y + y * den;
 					v->z = min_z + z * den;
 
-					da = distToPlane(v, tetra[i].a);
-					db = distToPlane(v, tetra[i].b);
-					dc = distToPlane(v, tetra[i].c);
-					dd = distToPlane(v, tetra[i].d);
+					t = &tetra + i;
+					
+					/*
+					t1 = t2 = t3 = t4 = *t;
+					t1.p4 = t2.p4 = t3.p4 = t4.p4 = v;
+					volumn = volumeOfTetra(t);
+					*/
 
-					if (da >= 0 && db >= 0 && dc >= 0 && dd >= 0) {
+					d1 = distToPlane(t->p1, t->a);
+					d2 = distToPlane(t->p2, t->b);
+					d3 = distToPlane(t->p3, t->c);
+					d4 = distToPlane(t->p4, t->d);
 
-						da = da / d1 * 2 * PI * PD;
-						db = db / d2 * 2 * PI * PD;
-						dc = dc / d3 * 2 * PI * PD;
-						dd = dd / d4 * 2 * PI * PD;
+					da = distToPlane(v, t->a) / d1 * 2 * PI * PD;
+					db = distToPlane(v, t->b) / d2 * 2 * PI * PD;
+					dc = distToPlane(v, t->c) / d3 * 2 * PI * PD;
+					dd = distToPlane(v, t->d) / d4 * 2 * PI * PD;
 
-						de = distBTPoints(v, tetra[i].p1);
-						df = distBTPoints(v, tetra[i].p2);
-						dg = distBTPoints(v, tetra[i].p3);
-						dh = distBTPoints(v, tetra[i].p4);
+					/*
+					de = distBTPoints(v, t->p1);
+					df = distBTPoints(v, t->p2);
+					dg = distBTPoints(v, t->p3);
+					dh = distBTPoints(v, t->p4);
 
-						l = fminf(de, fminf(df, fminf(dg, dh)));
+					l = fminf(de, fminf(df, fminf(dg, dh)));
 
-						r1 = volumeOfTetra(t1) / volumn;
-						r2 = volumeOfTetra(t2) / volumn;
-						r3 = volumeOfTetra(t3) / volumn;
-						r4 = volumeOfTetra(t4) / volumn;
+					r1 = volumeOfTetra(&t1) / volumn;
+					r2 = volumeOfTetra(&t2) / volumn;
+					r3 = volumeOfTetra(&t3) / volumn;
+					r4 = volumeOfTetra(&t4) / volumn;
+					*/
 
-						switch (type) {
-						case P:
-							//dataset[indexVect(x, y, z)] = cos(da) + cos(db) + cos(dc) + cos(dd) + cos(da) * cos(db) * cos(dc) * cos(dd);
-							//dataset[indexVect(x, y, z)] = r1 * cos(de) + r2 * cos(df) + r3 * cos(dg) + r4 * cos(dh);
-							//dataset[indexVect(x, y, z)] = cos(da)*(2 * PI - da) / (2 * PI) + cos(db)*(2 * PI - db) / (2 * PI) + cos(dc)*(2 * PI - dc) / (2 * PI) + cos(dd)*(2 * PI - dd) / (2 * PI);
-							dataset[indexVect(x, y, z)] = cos(da)*(da) / (2 * PI) + cos(db)*(db) / (2 * PI) + cos(dc)*(dc) / (2 * PI) + cos(dd)*(dd) / (2 * PI);
-							//dataset[indexVect(x, y, z)] = cos(l / length * 2 * PI);
-							break;
-						case D:
-							dataset[indexVect(x, y, z)] = sin(da) * cos(db)	* cos(dc) * cos(dd) + cos(da) * sin(db)	* cos(dc) * cos(dd) + cos(da) * cos(db)	* sin(dc) * cos(dd) + cos(da) * cos(db)	* cos(dc) * sin(dd) + cos(da) * cos(db)	* cos(dc) * cos(dd);
-							break;
-						case G:
-							dataset[indexVect(x, y, z)] = cos(da) * sin(db) + cos(db) * sin(dc) + cos(dc) * sin(dd) + cos(dd) * sin(da) + cos(da) * cos(db)	* cos(dc) * cos(dd);
-							break;
-						}
+					/*
+					d5 = distBTPoints(t->p1, t->p2);
+					d6 = distBTPoints(t->p1, t->p3);
+					d7 = distBTPoints(t->p1, t->p4);
+					d8 = distBTPoints(t->p2, t->p3);
+					d9 = distBTPoints(t->p2, t->p4);
+					d10 = distBTPoints(t->p3, t->p4);
+
+					length = fmaxf(d5, fmaxf(d6, fmaxf(d7, fmaxf(d8, fmaxf(d9, d10)))));
+					*/
+
+					switch (type) {
+					case P:
+						//dataset[index] = cos(da) + cos(db) + cos(dc) + cos(dd) + cos(da) * cos(db) * cos(dc) * cos(dd);
+						//dataset[index] = r1 * cos(de) + r2 * cos(df) + r3 * cos(dg) + r4 * cos(dh);
+						//dataset[index] = cos(da)*(2 * PI - da) / (2 * PI) + cos(db)*(2 * PI - db) / (2 * PI) + cos(dc)*(2 * PI - dc) / (2 * PI) + cos(dd)*(2 * PI - dd) / (2 * PI);
+						dataset[index] = cos(da)*(da) / (2 * PI) + cos(db)*(db) / (2 * PI) + cos(dc)*(dc) / (2 * PI) + cos(dd)*(dd) / (2 * PI);
+						//dataset[index] = cos(l / length * 2 * PI);
+						break;
+					case D:
+						dataset[index] = sin(da) * cos(db)	* cos(dc) * cos(dd) + cos(da) * sin(db)	* cos(dc) * cos(dd) + cos(da) * cos(db)	* sin(dc) * cos(dd) + cos(da) * cos(db)	* cos(dc) * sin(dd) + cos(da) * cos(db)	* cos(dc) * cos(dd);
+						break;
+					case G:
+						dataset[index] = cos(da) * sin(db) + cos(db) * sin(dc) + cos(dc) * sin(dd) + cos(dd) * sin(da) + cos(da) * cos(db)	* cos(dc) * cos(dd);
+						break;
 					}
 				}
-	}
+			}
 
-	free(t1);
-	free(t2);
-	free(t3);
-	free(t4);
+	t = NULL;
 	free(v);
+	free(tetraIndex);
 
 	return dataset;
 }
