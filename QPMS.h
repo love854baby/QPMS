@@ -4,7 +4,7 @@
 #define SQRT_TWO 1.41421356237
 #define SQRT_TREEE 1.73205080757
 
-#define DIM 10000 // Number of the cells on each dimension
+#define DIM 200 // Number of the cells on each dimension
 #define PD 1  // Max periods from three dimensions
 
 typedef enum {
