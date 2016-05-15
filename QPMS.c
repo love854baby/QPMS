@@ -421,28 +421,49 @@ float* generateDataset(TETRAHEDRON *tetra, SURFACE_TYPE type, int size) {
 	float d1, d2, d3, d4, d5, d6, d7, d8, d9, d10;
 	float r1, r2, r3, r4, length, l;
 	float volumn;
+	float max[3], min[3];
+	POINT *a, *b, *c, *d;
+	int start_x, start_y, start_z, end_x, end_y, end_z;
 
 	for (i = 0; i < size; i++) {
+		a = tetra[i].p1;
+		b = tetra[i].p2;
+		c = tetra[i].p3;
+		d = tetra[i].p4;
 
-		t1->p1 = tetra[i].p2;
-		t1->p2 = tetra[i].p3;
-		t1->p3 = tetra[i].p4;
+		t1->p1 = b;
+		t1->p2 = c;
+		t1->p3 = d;
 		t1->p4 = v;
 
-		t2->p1 = tetra[i].p1;
-		t2->p2 = tetra[i].p3;
-		t2->p3 = tetra[i].p4;
+		t2->p1 = a;
+		t2->p2 = c;
+		t2->p3 = d;
 		t2->p4 = v;
 
-		t3->p1 = tetra[i].p1;
-		t3->p2 = tetra[i].p2;
-		t3->p3 = tetra[i].p4;
+		t3->p1 = a;
+		t3->p2 = b;
+		t3->p3 = d;
 		t3->p4 = v;
 
-		t4->p1 = tetra[i].p1;
-		t4->p2 = tetra[i].p2;
-		t4->p3 = tetra[i].p3;
+		t4->p1 = a;
+		t4->p2 = b;
+		t4->p3 = c;
 		t4->p4 = v;
+
+		max[0] = fmaxf(fmaxf(fmaxf(a->x, b->x), c->x), d->x);
+		max[1] = fmaxf(fmaxf(fmaxf(a->y, b->y), c->y), d->y);
+		max[2] = fmaxf(fmaxf(fmaxf(a->z, b->z), c->z), d->z);
+		min[0] = fminf(fminf(fminf(a->x, b->x), c->x), d->x);
+		min[1] = fminf(fminf(fminf(a->y, b->y), c->y), d->y);
+		min[2] = fminf(fminf(fminf(a->z, b->z), c->z), d->z);
+
+		start_x = floor((min[0] - min_x) / den);
+		start_y = floor((min[1] - min_y) / den);
+		start_z = floor((min[2] - min_z) / den);
+		end_x = ceil((max[0] - min_x) / den);
+		end_y = ceil((max[1] - min_y) / den);
+		end_z = ceil((max[2] - min_z) / den);
 
 		volumn = volumeOfTetra(&tetra[i]);
 
@@ -460,9 +481,9 @@ float* generateDataset(TETRAHEDRON *tetra, SURFACE_TYPE type, int size) {
 
 		length = fmaxf(d5, fmaxf(d6, fmaxf(d7, fmaxf(d8, fmaxf(d9, d10)))));
 
-		for (x = 0; x < xdim; x++)
-			for (y = 0; y < ydim; y++)
-				for (z = 0; z < zdim; z++) {
+		for (x = start_x; x <= end_x; x++)
+			for (y = start_y; y <= end_y; y++)
+				for (z = start_z; z <= end_z; z++) {
 					v->x = min_x + x * den;
 					v->y = min_y + y * den;
 					v->z = min_z + z * den;
