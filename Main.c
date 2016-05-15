@@ -239,6 +239,12 @@ int main() {
 	init(tetra, size);
 
 	float *array = generateDataset(tetra, type, size);
+	float min[3], max[3];
+	int i;
+	for (i = 0; i < sizeof(array) / sizeof(float); i++) {
+		if (array[i].x < min[0])
+			min[0] = array[i].x;
+	}
 	float thres = convertThres(array, 88);
 
 	clock_t start = clock(), diff;
