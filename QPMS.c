@@ -310,7 +310,7 @@ const int triTable[256][16] = {
 };
 
 int xdim, ydim, zdim;
-float min_x, min_y, min_z, max_x, max_y, max_z, den;
+float min_x, min_y, min_z, max_x, max_y, max_z, maxVal, den;
 int *tetraIndex;
 float *dataset;
 
@@ -360,6 +360,7 @@ void init(TETRAHEDRON *tetra, int size) {
 	float d0, d1, d2, d3, d4;
 	float max[3], min[3];
 	int start_x, start_y, start_z, end_x, end_y, end_z;
+
 	for (i = 0; i < size; i++) {
 		a = tetra[i].p1;
 		b = tetra[i].p2;
@@ -470,6 +471,8 @@ float* generateDataset(TETRAHEDRON *tetra, SURFACE_TYPE type, int size) {
 	float r1, r2, r3, r4, length, l;
 	float volumn;
 
+	maxVal = FLT_MIN;
+
 	for (i = 0; i < xdim * ydim * zdim; i++) {
 		dataset[i] = OUTSIDE;
 	}
@@ -494,7 +497,7 @@ float* generateDataset(TETRAHEDRON *tetra, SURFACE_TYPE type, int size) {
 					volumn = volumeOfTetra(t);
 					*/
 
-					d1 = distToPlane(t->p1, t->a);
+ 					d1 = distToPlane(t->p1, t->a);
 					d2 = distToPlane(t->p2, t->b);
 					d3 = distToPlane(t->p3, t->c);
 					d4 = distToPlane(t->p4, t->d);
@@ -544,6 +547,9 @@ float* generateDataset(TETRAHEDRON *tetra, SURFACE_TYPE type, int size) {
 						dataset[index] = cos(da) * sin(db) + cos(db) * sin(dc) + cos(dc) * sin(dd) + cos(dd) * sin(da) + cos(da) * cos(db)	* cos(dc) * cos(dd);
 						break;
 					}
+
+					if (dataset[index] > maxVal)
+						maxVal = dataset[index];
 				}
 			}
 
@@ -965,10 +971,10 @@ void writeRawiv(float* dataset, char* name) {
 
 void scaleDataset(float *dataset) {
 	float min = FLT_MAX, max = FLT_MIN;
-
 	int i;
+
 	for (i = 0; i < xdim * ydim * zdim; i++) {
-		if (dataset[i] > OUTSIDE - 10)
+		if (dataset[i] > maxVal)
 			continue;
 		if (dataset[i] < min)
 			min = dataset[i];
@@ -979,8 +985,8 @@ void scaleDataset(float *dataset) {
 	float length = max - min;
 
 	for (i = 0; i < xdim * ydim * zdim; i++) {
-		if (dataset[i] > OUTSIDE - 10)
-			dataset[i] = 255;
+		if (dataset[i] > maxVal)
+			dataset[i] = 0;
 		else
 			dataset[i] = (dataset[i] - min) / length * 255;
 	}

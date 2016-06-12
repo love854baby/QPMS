@@ -4,7 +4,7 @@
 #include <time.h>
 #include "QPMS.h"
 
-#define numOfTetra 2
+#define numOfTetra 1
 
 int main() {
 	POINT *vertice = (POINT *)malloc(sizeof(POINT) * 4 * numOfTetra);
@@ -167,7 +167,8 @@ int main() {
 	vertice[78] = v5;
 	vertice[79] = v12;
 	*/
-	
+
+	/*
 	vertice[0].x = 1;
 	vertice[0].y = 0;
 	vertice[0].z = 0;
@@ -199,9 +200,8 @@ int main() {
 	vertice[7].x = 0;
 	vertice[7].y = SQRT_TREEE / 3;
 	vertice[7].z = -2 * SQRT_TWO / SQRT_TREEE;
-	
+	*/
 
-	/*
 	vertice[0].x = 1;
 	vertice[0].y = 1;
 	vertice[0].z = 1;
@@ -217,12 +217,11 @@ int main() {
 	vertice[3].x = -1;
 	vertice[3].y = -1;
 	vertice[3].z = 1;
-	*/
 
 	//Set surface type here
 	SURFACE_TYPE type = P;
 
-	int size, i;
+	int size = numOfTetra, i;
 
 	TETRAHEDRON *tetra = readTet("bone_tet_4.tet", &size);
 
@@ -239,13 +238,7 @@ int main() {
 	init(tetra, size);
 
 	float *array = generateDataset(tetra, type, size);
-	float min[3], max[3];
-	int i;
-	for (i = 0; i < sizeof(array) / sizeof(float); i++) {
-		if (array[i].x < min[0])
-			min[0] = array[i].x;
-	}
-	float thres = convertThres(array, 88);
+	float thres = convertThres(array, 70);
 
 	clock_t start = clock(), diff;
 
@@ -261,7 +254,7 @@ int main() {
 	//char* name = "pMesh2.off";
 	wirteOFF(surfmesh, name);
 
-	char *rawiv_name = "test5.rawiv";
+	char *rawiv_name = "test.rawiv";
 	writeRawiv(array, rawiv_name);
 
 	free(surfmesh->vertice);
