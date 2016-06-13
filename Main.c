@@ -4,12 +4,12 @@
 #include <time.h>
 #include "QPMS.h"
 
-#define numOfTetra 1
+#define numOfTetra 20
 
 int main() {
-	POINT *vertice = (POINT *)malloc(sizeof(POINT) * 4 * numOfTetra);
 
-	/*
+	POINT *vertice = (POINT *)malloc(sizeof(POINT) * 4 * numOfTetra);
+	
 	float t = (1 + sqrt(5)) / 2;
 	float t2 = 1 / sqrt(1 + t * t) * 100;
 
@@ -166,7 +166,7 @@ int main() {
 	vertice[77] = v7;
 	vertice[78] = v5;
 	vertice[79] = v12;
-	*/
+
 
 	/*
 	vertice[0].x = 1;
@@ -202,6 +202,7 @@ int main() {
 	vertice[7].z = -2 * SQRT_TWO / SQRT_TREEE;
 	*/
 
+	/*
 	vertice[0].x = 1;
 	vertice[0].y = 1;
 	vertice[0].z = 1;
@@ -217,28 +218,31 @@ int main() {
 	vertice[3].x = -1;
 	vertice[3].y = -1;
 	vertice[3].z = 1;
+	*/
 
 	//Set surface type here
 	SURFACE_TYPE type = P;
 
-	int size = numOfTetra, i;
+	int size = numOfTetra;
 
-	TETRAHEDRON *tetra = readTet("bone_tet_4.tet", &size);
+	//TETRAHEDRON *tetra = readTet("bone_tet_4.tet", &size);
 
-	/*
+
 	TETRAHEDRON *tetra = (TETRAHEDRON *)malloc(sizeof(TETRAHEDRON) * numOfTetra);
+	int i;
+	
 	for (i = 0; i < numOfTetra; i++) {
 		tetra[i].p1 = &vertice[i * 4];
 		tetra[i].p2 = &vertice[i * 4 + 1];
 		tetra[i].p3 = &vertice[i * 4 + 2];
 		tetra[i].p4 = &vertice[i * 4 + 3];
 	}
-	*/
+
 	
 	init(tetra, size);
 
 	float *array = generateDataset(tetra, type, size);
-	float thres = convertThres(array, 70);
+	float thres = convertThres(array, 88);
 
 	clock_t start = clock(), diff;
 

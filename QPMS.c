@@ -536,9 +536,9 @@ float* generateDataset(TETRAHEDRON *tetra, SURFACE_TYPE type, int size) {
 					case P:
 						//dataset[index] = cos(da) + cos(db) + cos(dc) + cos(dd) + cos(da) * cos(db) * cos(dc) * cos(dd);
 						//dataset[index] = r1 * cos(de) + r2 * cos(df) + r3 * cos(dg) + r4 * cos(dh);
-						//dataset[index] = cos(da)*(2 * PI - da) / (2 * PI) + cos(db)*(2 * PI - db) / (2 * PI) + cos(dc)*(2 * PI - dc) / (2 * PI) + cos(dd)*(2 * PI - dd) / (2 * PI);
-						dataset[index] = cos(da)*(da) / (2 * PI) + cos(db)*(db) / (2 * PI) + cos(dc)*(dc) / (2 * PI) + cos(dd)*(dd) / (2 * PI);
-						//dataset[index] = cos(l / length * 2 * PI);
+						//dataset[index] = cos(da)*(2 * PI - da) / (2 * PI) + cos(db)*(2 * PI - db) / (2 * PI) + cos(dc)*(2 * PI - dc) / (2 * PI) + cos(dd)*(2 * PI - dd) / (2 * PI); //thres = 150
+						dataset[index] = cos(da)*(da) / (2 * PI) + cos(db)*(db) / (2 * PI) + cos(dc)*(dc) / (2 * PI) + cos(dd)*(dd) / (2 * PI); //thres = 88
+						//dataset[index] = cos(l / length * 2 * PI); // nothing
 						break;
 					case D:
 						dataset[index] = sin(da) * cos(db)	* cos(dc) * cos(dd) + cos(da) * sin(db)	* cos(dc) * cos(dd) + cos(da) * cos(db)	* sin(dc) * cos(dd) + cos(da) * cos(db)	* cos(dc) * sin(dd) + cos(da) * cos(db)	* cos(dc) * cos(dd);
@@ -603,7 +603,7 @@ SURFACEMESH* marchingCube(float* dataset, float isovalue) {
 				if (dataset[indexVect(i, j, k)] > isovalue - 0.0001 && dataset[indexVect(i, j, k)] < isovalue + 0.0001)
 					dataset[indexVect(i, j, k)] = isovalue + 0.0001;
 
-				if (dataset[indexVect(i, j, k)] >= OUTSIDE - 10)
+				if (dataset[indexVect(i, j, k)] > maxVal + 1)
 					mc_sign[indexVect(i, j, k)] = 50;
 				else if (dataset[indexVect(i, j, k)] >= isovalue)
 					mc_sign[indexVect(i, j, k)] = 1;
